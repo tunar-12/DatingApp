@@ -51,7 +51,9 @@ public class AccountController : BaseApiController
     public async Task<ActionResult<UserDTO>> Login(LoginDto loginDto)
     {
         // first or default is get in django
-        var user = await _context.Users.SingleOrDefaultAsync(x => x.UserName == loginDto.Username);
+        var user = await _context.Users
+        .Include(p => p.Photos)
+        .SingleOrDefaultAsync(x => x.UserName == loginDto.Username);
 
         if (user == null) return Unauthorized("invalid username");
 
@@ -67,7 +69,8 @@ public class AccountController : BaseApiController
         return new UserDTO
         {
             Username = user.UserName,
-            Token = _tokenService.CreateToken(user)
+            Token = _tokenService.CreateToken(user),
+            PhotoUrl = user.Photos.FirstOrDefault(x => x.IsMain).Url
         };
     }
     // checking if username exists
